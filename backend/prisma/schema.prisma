@@ -1,0 +1,434 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SystemRole {
+  ADMIN
+  CEO
+}
+
+enum BusinessRole {
+  CEO
+  GERENTE
+  EMPLEADO
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  username     String     @unique
+  passwordHash String     @map("password_hash")
+  fullName     String     @map("full_name")
+  phone        String?
+  email        String?
+  systemRole   SystemRole @default(CEO) @map("system_role")
+  isActive     Boolean    @default(true) @map("is_active")
+  canManageUsers Boolean  @default(false) @map("can_manage_users")
+  canEditUsers   Boolean  @default(false) @map("can_edit_users")
+  canDeleteUsers Boolean  @default(false) @map("can_delete_users")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @default(now()) @map("updated_at")
+  
+  ownedBusinesses Business[]     @relation("BusinessOwner")
+  businessUsers   BusinessUser[]
+
+  assignments  EmployeeAssignment[]
+  sales        Sale[]
+  movements    InventoryMovement[]
+  expenses     Expense[]
+  attendances  Attendance[]
+
+  @@map("users")
+}
+
+model Business {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  logo        String?
+  ownerId     Int      @map("owner_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  owner     User           @relation("BusinessOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  users     BusinessUser[]
+
+  products            Product[]
+  ingredients         Ingredient[]
+  menuItems           MenuItem[]
+  positions           Position[]
+  cashRegisters       CashRegister[]
+  workShifts          WorkShift[]
+  employeeAssignments EmployeeAssignment[]
+  sales               Sale[]
+  inventoryMovements  InventoryMovement[]
+  expenses            Expense[]
+  attendances         Attendance[]
+
+  @@map("businesses")
+}
+
+model BusinessUser {
+  id         Int          @id @default(autoincrement())
+  businessId Int          @map("business_id")
+  userId          Int          @map("user_id")
+  role            BusinessRole @default(EMPLEADO)
+  contractType    String?      @map("contract_type") // Mensual, Quincenal, Por Hora, Por Día, Sueldo Unificado / Rotativo
+  baseSalary      Decimal?     @map("base_salary")
+  nextPaymentDate DateTime?    @map("next_payment_date") @db.Date
+  paymentMode     String       @default("AUTOMATIC") @map("payment_mode")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, userId])
+  @@map("business_users")
+}
+
+enum ProductCategory {
+  INSUMO
+  REVENTA
+}
+
+enum IngredientType {
+  DIRECTO
+  PREPARADO
+}
+
+enum MovementType {
+  ENTRY
+  ADJUSTMENT
+  CONSUMPTION
+}
+
+enum SalaryType {
+  Mensual
+  Semanal
+  Diario
+  Por_hora
+}
+
+enum ExpenseCategory {
+  SERVICIOS
+  ALQUILER
+  PUBLICIDAD
+  MANTENIMIENTO
+  TRANSPORTE
+  LIMPIEZA
+  PAPELERIA
+  SEGURIDAD
+  SALARIOS
+  OTROS
+}
+
+enum ExpenseStatus {
+  PENDIENTE
+  PAGADO
+  ANULADO
+}
+
+enum MenuItemType {
+  PREPARADO
+  REVENTA
+}
+
+model Product {
+  id           Int             @id @default(autoincrement())
+  businessId   Int             @map("business_id")
+  name         String
+  description  String?
+  category     ProductCategory @default(INSUMO)
+  unit         String
+  currentStock Decimal         @default(0) @map("current_stock")
+  minimumStock Decimal         @default(0) @map("minimum_stock")
+  isActive     Boolean         @default(true) @map("is_active")
+  imageUrl     String?         @map("image_url")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @default(now()) @map("updated_at")
+  
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem?
+  movements    InventoryMovement[]
+  ingredientRecipes IngredientRecipe[]
+  directIngredients Ingredient[]
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("products")
+}
+
+model Ingredient {
+  id              Int            @id @default(autoincrement())
+  businessId      Int            @map("business_id")
+  name            String
+  description     String?
+  type            IngredientType
+  linkedProductId Int?           @map("linked_product_id")
+  isActive        Boolean        @default(true) @map("is_active")
+  
+  yieldQuantity   Decimal?       @map("yield_quantity")
+  yieldUnit       String?        @map("yield_unit")
+  yieldDescription String?       @map("yield_description")
+  
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @default(now()) @map("updated_at")
+
+  business        Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  linkedProduct   Product?       @relation(fields: [linkedProductId], references: [id], onDelete: Restrict)
+  recipeItems     IngredientRecipe[] @relation("IngredientToRecipes")
+  menuRecipeItems RecipeItem[]
+  parentRecipes   IngredientRecipe[] @relation("ChildIngredientToRecipes")
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("ingredients")
+}
+
+model IngredientRecipe {
+  id               Int      @id @default(autoincrement())
+  ingredientId     Int      @map("ingredient_id")
+  productId        Int?     @map("product_id")
+  childIngredientId Int?    @map("child_ingredient_id")
+  quantity         Decimal
+
+  ingredient       Ingredient  @relation("IngredientToRecipes", fields: [ingredientId], references: [id], onDelete: Cascade)
+  product          Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  childIngredient  Ingredient? @relation("ChildIngredientToRecipes", fields: [childIngredientId], references: [id], onDelete: Restrict)
+
+  @@map("ingredient_recipes")
+}
+
+model MenuItem {
+  id              Int          @id @default(autoincrement())
+  businessId      Int          @map("business_id")
+  name            String
+  description     String?
+  price           Decimal?
+  status          String       @default("Borrador")
+  statusReason    String?      @map("status_reason")
+  type            MenuItemType @default(PREPARADO)
+  linkedProductId Int?         @unique @map("linked_product_id")
+  imageUrl        String?      @map("image_url")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @map("updated_at")
+  
+  business        Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  recipeItems     RecipeItem[]
+  saleItems       SaleItem[]
+  linkedProduct   Product?     @relation(fields: [linkedProductId], references: [id], onDelete: Restrict)
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("menu_items")
+}
+
+model RecipeItem {
+  id           Int      @id @default(autoincrement())
+  menuItemId   Int      @map("menu_item_id")
+  ingredientId Int      @map("ingredient_id")
+  quantity     Decimal
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  menuItem     MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@unique([menuItemId, ingredientId])
+  @@map("recipe_items")
+}
+
+model Position {
+  id          Int      @id @default(autoincrement())
+  businessId  Int      @map("business_id")
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignments EmployeeAssignment[]
+
+  @@unique([businessId, name])
+  @@map("positions")
+}
+
+model CashRegister {
+  id          Int      @id @default(autoincrement())
+  businessId  Int      @map("business_id")
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignments EmployeeAssignment[]
+  sales       Sale[]
+
+  @@unique([businessId, name])
+  @@map("cash_registers")
+}
+
+model EmployeeAssignment {
+  id             Int      @id @default(autoincrement())
+  businessId     Int      @map("business_id")
+  userId         Int      @map("user_id")
+  positionId      Int      @map("position_id")
+  cashRegisterId  Int?       @map("cash_register_id")
+  workShiftId     Int?       @map("work_shift_id")
+  extraPayForShift Decimal?  @map("extra_pay_for_shift")
+  isActive        Boolean    @default(true) @map("is_active")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @default(now()) @map("updated_at")
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  position     Position      @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id], onDelete: SetNull)
+  workShift    WorkShift?    @relation(fields: [workShiftId], references: [id], onDelete: Restrict)
+  attendances  Attendance[]
+
+  @@index([businessId])
+  @@map("employee_assignments")
+}
+
+model WorkShift {
+  id               Int      @id @default(autoincrement())
+  businessId       Int      @map("business_id")
+  name             String
+  description      String?
+  observations     String?
+  color            String?  @default("#10B981")
+  startTime        DateTime @map("start_time") @db.Time
+  endTime          DateTime @map("end_time") @db.Time
+  breakStartTime   DateTime? @map("break_start_time") @db.Time
+  breakEndTime     DateTime? @map("break_end_time") @db.Time
+  toleranceMinutes Int      @default(0) @map("tolerance_minutes")
+  
+  monday           Boolean  @default(false)
+  tuesday          Boolean  @default(false)
+  wednesday        Boolean  @default(false)
+  thursday         Boolean  @default(false)
+  friday           Boolean  @default(false)
+  saturday         Boolean  @default(false)
+  sunday           Boolean  @default(false)
+  
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @map("updated_at")
+
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignments      EmployeeAssignment[]
+
+  @@unique([businessId, name])
+  @@map("work_shifts")
+}
+
+model Sale {
+  id             Int      @id @default(autoincrement())
+  businessId     Int      @map("business_id")
+  userId         Int?     @map("user_id")
+  cashRegisterId Int?     @map("cash_register_id")
+  userNameSnapshot String? @map("user_name_snapshot")
+  cashRegisterNameSnapshot String? @map("cash_register_name_snapshot")
+  total          Decimal
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id], onDelete: SetNull)
+  items        SaleItem[]
+
+  @@index([businessId])
+  @@index([businessId, createdAt])
+  @@map("sales")
+}
+
+model SaleItem {
+  id         Int      @id @default(autoincrement())
+  saleId     Int      @map("sale_id")
+  menuItemId Int?     @map("menu_item_id")
+  menuItemNameSnapshot String? @map("menu_item_name_snapshot")
+  quantity   Int
+  unitPrice  Decimal  @map("unit_price")
+  subtotal   Decimal
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sale     Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@map("sale_items")
+}
+
+model InventoryMovement {
+  id         Int          @id @default(autoincrement())
+  businessId Int          @map("business_id")
+  productId  Int?         @map("product_id")
+  userId     Int?         @map("user_id")
+  productNameSnapshot String? @map("product_name_snapshot")
+  productCategorySnapshot String? @map("product_category_snapshot")
+  userNameSnapshot String? @map("user_name_snapshot")
+  type       MovementType
+  quantity   Decimal
+  cost       Decimal?
+  reason     String?
+  supplier   String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  product  Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([businessId, createdAt])
+  @@map("inventory_movements")
+}
+
+model Expense {
+  id              Int             @id @default(autoincrement())
+  businessId      Int             @map("business_id")
+  concept         String
+  category        ExpenseCategory
+  amount          Decimal
+  date            DateTime        @db.Date
+  status          ExpenseStatus   @default(PAGADO)
+  supplier        String?
+  reference       String?         // Comprobante
+  observations    String?
+  userId          Int?            @map("user_id")
+  userNameSnapshot String?        @map("user_name_snapshot")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @default(now()) @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([businessId, date])
+  @@map("expenses")
+}
+
+model Attendance {
+  id           Int      @id @default(autoincrement())
+  assignmentId Int      @map("assignment_id")
+  userId       Int      @map("user_id")
+  businessId   Int      @map("business_id")
+  date         DateTime @db.Date
+  checkInTime  DateTime? @map("check_in_time")
+  status       String   @default("PENDING_CHECK_IN") // PENDING_CHECK_IN, PENDING_APPROVAL, APPROVED, REJECTED, ABSENT
+  notes        String?
+
+  assignment   EmployeeAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  business     Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, date])
+  @@map("attendances")
+}

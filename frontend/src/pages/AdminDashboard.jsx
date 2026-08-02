@@ -1,0 +1,126 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+function AdminDashboard() {
+  const navigate = useNavigate();
+  const business = JSON.parse(localStorage.getItem('selectedBusiness') || '{}');
+  const businessRole = business.role || 'EMPLEADO';
+
+  const [stats, setStats] = useState({
+    pendingAttendancesCount: 0,
+    hasActiveAssignment: false,
+    myTodayAttendance: null,
+    activeShiftSales: { total: 0, count: 0 },
+    staffAssignedToday: 0,
+    staffCheckedInToday: 0
+  });
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    const fetchDashboardStats = async () => {
+      try {
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/analytics/dashboard`, { headers, signal: abortController.signal });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (!abortController.signal.aborted) {
+            setStats(data);
+          }
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error("Error fetching dashboard stats:", error);
+        }
+      }
+    };
+    fetchDashboardStats();
+    return () => abortController.abort();
+  }, []);
+
+  return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <h1 style={{ marginBottom: '0.5rem' }}>Inicio</h1>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Centro de Comando Operativo</p>
+      
+      {/* 1. Alerta de Asistencias Pendientes (Solo CEO) */}
+      {businessRole === 'CEO' && stats.pendingAttendancesCount > 0 && (
+        <div style={{ 
+          backgroundColor: '#FFFBEB', 
+          borderLeft: '4px solid #F59E0B', 
+          padding: '1.5rem', 
+          borderRadius: '8px', 
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#B45309' }}>Asistencias Pendientes</h3>
+            <p style={{ margin: 0, color: '#92400E' }}>Hay {stats.pendingAttendancesCount} asistencia(s) pendiente(s) de aprobación.</p>
+          </div>
+          <button 
+            className="btn btn-primary"
+            style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B' }}
+            onClick={() => navigate('/admin/personal')}
+          >
+            Revisar Asistencias
+          </button>
+        </div>
+      )}
+
+      {/* 2. Mi Asistencia Rápida (Para Empleados/Usuarios que deben marcar) */}
+      {stats.hasActiveAssignment && (
+        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', border: '1px solid #E5E7EB', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#111827' }}>Mi Asistencia de Hoy</h3>
+            <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+              {stats.myTodayAttendance 
+                ? `Estado actual: ${stats.myTodayAttendance.status === 'APPROVED' ? 'Aprobado' : stats.myTodayAttendance.status === 'PENDING_APPROVAL' ? 'Pendiente' : stats.myTodayAttendance.status === 'REJECTED' ? 'Rechazado' : 'Por Marcar'}`
+                : 'No has marcado tu llegada hoy o no tienes turno asignado.'}
+            </p>
+          </div>
+          <button 
+            className="btn btn-primary"
+            onClick={() => navigate('/admin/personal')}
+          >
+            {stats.myTodayAttendance && stats.myTodayAttendance.status !== 'PENDING_CHECK_IN' ? 'Ver mis Asistencias' : 'Marcar mi Asistencia'}
+          </button>
+        </div>
+      )}
+
+      {/* 3. Tarjetas Resumen Útiles del Turno */}
+      <h3 style={{ marginBottom: '1rem' }}>Métricas del Turno Activo</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        
+        {/* Personal en Local Hoy */}
+        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#6B7280' }}>Personal en Local (Turno)</h4>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+            <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#111827' }}>{stats.staffCheckedInToday}</span>
+            <span style={{ fontSize: '1.2rem', color: '#6B7280' }}>/ {stats.staffAssignedToday}</span>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            empleados han marcado asistencia en el turno actual
+          </p>
+        </div>
+
+        {/* Ventas del Turno Activo */}
+        <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', border: '1px solid #E5E7EB', borderLeft: '4px solid #10B981' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#6B7280' }}>Ventas del Turno Activo</h4>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+            <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#111827' }}>
+              Bs. {Number(stats.activeShiftSales.total).toFixed(2)}
+            </span>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            Acumulado de {stats.activeShiftSales.count} venta(s) desde el inicio del turno
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+export default AdminDashboard;
