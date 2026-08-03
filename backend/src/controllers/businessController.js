@@ -48,7 +48,7 @@ const createBusiness = async (req, res) => {
 
     let imageUrl = logo || null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     }
 
     const business = await prisma.business.create({
@@ -107,7 +107,7 @@ const updateBusiness = async (req, res) => {
     if (removeImage === 'true') {
       updatedLogo = null;
     } else if (req.file) {
-      updatedLogo = `/uploads/${req.file.filename}`;
+      updatedLogo = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     }
 
     const business = await prisma.business.update({

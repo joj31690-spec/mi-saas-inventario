@@ -93,7 +93,7 @@ const createMenuItem = async (req, res) => {
 
     let imageUrl = null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     }
 
     const newMenuItem = await prisma.menuItem.create({
@@ -144,7 +144,7 @@ const updateMenuItem = async (req, res) => {
     if (removeImage === 'true') {
       updatedImageUrl = null;
     } else if (req.file && current.type === 'PREPARADO') {
-      updatedImageUrl = `/uploads/${req.file.filename}`;
+      updatedImageUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     }
 
     await prisma.menuItem.update({

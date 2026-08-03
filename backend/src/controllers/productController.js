@@ -75,7 +75,7 @@ const createProduct = async (req, res) => {
     const { name, description, category, unit, minimumStock } = req.body;
     let imageUrl = null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      imageUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     }
 
     if (!validUnits.includes(unit)) {
@@ -185,7 +185,7 @@ const updateProduct = async (req, res) => {
       if (removeImage === 'true') {
         dataToUpdate.imageUrl = null;
       } else if (req.file) {
-        dataToUpdate.imageUrl = `/uploads/${req.file.filename}`;
+        dataToUpdate.imageUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
       }
 
       const p = await tx.product.update({
