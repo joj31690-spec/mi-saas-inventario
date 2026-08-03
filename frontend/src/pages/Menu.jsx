@@ -659,33 +659,29 @@ function Menu() {
                       {businessRole !== 'EMPLEADO' && (
                         <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                           {item.type === 'PREPARADO' && (
-                            <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', color: 'inherit' }} onClick={() => handleOpenRecipeModal(item)}>Receta</button>
+                            <button className="action-btn btn-details" onClick={() => handleOpenRecipeModal(item)}>Receta</button>
                           )}
-                          <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', color: 'inherit' }} onClick={() => handleOpenMenuModal(item)}>Editar</button>
+                          <button className="action-btn btn-edit" onClick={() => handleOpenMenuModal(item)}>Editar</button>
                           {canPublish && (
                             <button 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
+                              className="action-btn btn-toggle"
                               onClick={() => handlePublish(item)}
                             >
                               Activar
                             </button>
                           )}
-                            <button className="action-btn btn-details" onClick={() => handleOpenRecipeModal(item)}>Receta</button>
-                          )}
-                          <button className="action-btn btn-edit" onClick={() => handleOpenMenuModal(item)}>Editar</button>
-                          {businessRole !== 'EMPLEADO' && (
+                          {canUnpublish && (
                             <button 
                               className="action-btn btn-toggle"
-                              onClick={() => handleToggleMenuActive(item)}
+                              onClick={() => handleUnpublish(item)}
                             >
-                              {item.isActive ? 'Desactivar' : 'Activar'}
+                              Desactivar
                             </button>
                           )}
-                          {businessRole === 'CEO' && (
+                          {businessRole === 'CEO' && item.type !== 'REVENTA' && (
                             <button 
                               className="action-btn btn-delete"
-                              onClick={() => handleDeleteMenu(item.id)}
+                              onClick={() => handleDeleteMenuItem(item)}
                             >
                               Eliminar
                             </button>
