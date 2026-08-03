@@ -104,8 +104,22 @@ const getDashboardStats = async (req, res) => {
       _count: { id: true }
     });
 
+    const today = new Date();
+    // Ajustar zona horaria si es necesario, usando UTC por ahora
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayName = daysOfWeek[today.getUTCDay()];
+
     const activeAssignmentsCount = await prisma.employeeAssignment.count({
-      where: { businessId, isActive: true }
+      where: { 
+        businessId, 
+        isActive: true,
+        workShift: {
+          is: {
+            [dayName]: true,
+            isActive: true
+          }
+        }
+      }
     });
 
     res.json({

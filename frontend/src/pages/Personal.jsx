@@ -88,15 +88,17 @@ function Personal() {
   const [assignments, setAssignments] = useState([]);
   const [workShifts, setWorkShifts] = useState([]);
   const [users, setUsers] = useState([]);
+
+  // UI state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  
   const { data: attendances = [], mutate: fetchAttendances } = useSWR(
     activeTab === 'attendance' ? `${import.meta.env.VITE_API_BASE_URL}/attendances?date=${attendanceDate}` : null,
     fetcher,
     { refreshInterval: 5000 }
   );
-
-  // UI state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  
   const [attendancePage, setAttendancePage] = useState(1);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -506,8 +508,9 @@ function Personal() {
   ];
   // Pagination for attendances
   const itemsPerPage = 30;
-  const totalAttendancePages = Math.ceil(attendances.length / itemsPerPage);
-  const paginatedAttendances = attendances.slice((attendancePage - 1) * itemsPerPage, attendancePage * itemsPerPage);
+  const safeAttendances = Array.isArray(attendances) ? attendances : [];
+  const totalAttendancePages = Math.ceil(safeAttendances.length / itemsPerPage);
+  const paginatedAttendances = safeAttendances.slice((attendancePage - 1) * itemsPerPage, attendancePage * itemsPerPage);
 
   return (
     <div>
@@ -589,33 +592,34 @@ function Personal() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedAttendances.length === 0 ? (
+                {!Array.isArray(paginatedAttendances) || paginatedAttendances.length === 0 ? (
                   <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>No hay turnos asignados para esta fecha.</td></tr>
                 ) : (
                   paginatedAttendances.map(a => {
-                    const shift = a.assignment?.workShift;
+                    if (!a) return null;
+                    const shift = a?.assignment?.workShift;
                     let statusLabel = '';
                     let statusColor = '';
-                    switch(a.status) {
+                    switch(a?.status) {
                       case 'PENDING_CHECK_IN': statusLabel = 'Por Marcar'; statusColor = '#9CA3AF'; break; // Gray
                       case 'PENDING_APPROVAL': statusLabel = 'Pendiente'; statusColor = '#F59E0B'; break; // Orange
                       case 'APPROVED': statusLabel = 'Aprobado'; statusColor = '#10B981'; break; // Green
                       case 'REJECTED': statusLabel = 'Rechazado'; statusColor = '#EF4444'; break; // Red
                       case 'ABSENT': statusLabel = 'Ausente'; statusColor = '#EF4444'; break; // Red
-                      default: statusLabel = a.status; statusColor = '#9CA3AF'; break;
+                      default: statusLabel = a?.status || 'N/A'; statusColor = '#9CA3AF'; break;
                     }
 
-                    const isMyAttendance = a.user.username === localStorage.getItem('username');
+                    const isMyAttendance = a?.user?.username === localStorage.getItem('username');
 
                     return (
-                      <tr key={a.id}>
-                        <td>{new Date(a.date).toISOString().split('T')[0]}</td>
-                        <td>{a.user?.fullName}</td>
-                        <td>{a.assignment?.position?.name || 'N/A'}</td>
+                      <tr key={a?.id || Math.random()}>
+                        <td>{a?.date ? new Date(a.date).toISOString().split('T')[0] : 'N/A'}</td>
+                        <td>{a?.user?.fullName || 'N/A'}</td>
+                        <td>{a?.assignment?.position?.name || 'N/A'}</td>
                         <td>{shift ? `${shift.name} (${formatTime(shift.startTime)} - ${formatTime(shift.endTime)})` : 'N/A'}</td>
                         <td>
-                          {a.checkInTime ? formatTime(a.checkInTime) : '-'}
-                          {a.notes && <div style={{ fontSize: '0.8rem', color: '#EF4444' }}>{a.notes}</div>}
+                          {a?.checkInTime ? formatTime(a.checkInTime) : '-'}
+                          {a?.notes && <div style={{ fontSize: '0.8rem', color: '#EF4444' }}>{a.notes}</div>}
                         </td>
                         <td>
                           <span style={{ 
