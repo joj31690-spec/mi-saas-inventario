@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '../utils/fetcher';
 
 function Sales() {
   const [activeTab, setActiveTab] = useState('registers'); // 'registers', 'history', 'pos'
@@ -6,7 +8,11 @@ function Sales() {
 
   // Data state
   const [cashRegisters, setCashRegisters] = useState([]);
-  const [salesHistory, setSalesHistory] = useState([]);
+  const { data: salesHistory = [], mutate: fetchSalesHistory } = useSWR(
+    `${import.meta.env.VITE_API_BASE_URL}/sales`,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
   const [menuItems, setMenuItems] = useState([]);
 
   // POS State
@@ -31,7 +37,7 @@ function Sales() {
     const signal = controller.signal;
 
     fetchCashRegisters(signal);
-    fetchSalesHistory(signal);
+
     fetchMenuItems(signal);
     if (businessRole === 'EMPLEADO') {
       fetchActiveAssignment(signal);
@@ -66,17 +72,7 @@ function Sales() {
     }
   };
 
-  const fetchSalesHistory = async (signal) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/sales`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        signal
-      });
-      if (res.ok) setSalesHistory(await res.json());
-    } catch (error) { 
-      if (error.name !== 'AbortError') showMessage('Error al cargar historial', 'error'); 
-    }
-  };
+
 
   const fetchMenuItems = async (signal) => {
     try {

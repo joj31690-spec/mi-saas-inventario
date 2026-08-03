@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '../utils/fetcher';
 
 // Helpers de tiempo
 const formatTime = (dateString) => {
@@ -86,7 +88,11 @@ function Personal() {
   const [assignments, setAssignments] = useState([]);
   const [workShifts, setWorkShifts] = useState([]);
   const [users, setUsers] = useState([]);
-  const [attendances, setAttendances] = useState([]);
+  const { data: attendances = [], mutate: fetchAttendances } = useSWR(
+    activeTab === 'attendance' ? `${import.meta.env.VITE_API_BASE_URL}/attendances?date=${attendanceDate}` : null,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
 
   // UI state
   const [searchTerm, setSearchTerm] = useState('');
@@ -197,15 +203,6 @@ function Personal() {
     }
   };
 
-  const fetchAttendances = async (signal) => {
-    try {
-      const res = await apiCall(`${import.meta.env.VITE_API_BASE_URL}/attendances?date=${attendanceDate}`, 'GET', null, signal);
-      if (res.ok) setAttendances(await res.json());
-    } catch (error) {
-      if (error.name !== 'AbortError') showMessage('Error al cargar asistencias', 'error');
-    }
-  };
-
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -218,14 +215,6 @@ function Personal() {
 
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (activeTab === 'attendance') {
-      fetchAttendances(controller.signal);
-    }
-    return () => controller.abort();
-  }, [attendanceDate, activeTab]);
 
   // --- Quick Actions ---
   const handleToggleState = async (type, id, fetcher) => {

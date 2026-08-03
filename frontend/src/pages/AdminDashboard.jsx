@@ -1,42 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useSWR from 'swr';
+import { fetcher } from '../utils/fetcher';
 
 function AdminDashboard() {
   const navigate = useNavigate();
   const business = JSON.parse(localStorage.getItem('selectedBusiness') || '{}');
   const businessRole = business.role || 'EMPLEADO';
 
-  const [stats, setStats] = useState({
+  const defaultStats = {
     pendingAttendancesCount: 0,
     hasActiveAssignment: false,
     myTodayAttendance: null,
     activeShiftSales: { total: 0, count: 0 },
     staffAssignedToday: 0,
     staffCheckedInToday: 0
-  });
+  };
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    const fetchDashboardStats = async () => {
-      try {
-        const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/analytics/dashboard`, { headers, signal: abortController.signal });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (!abortController.signal.aborted) {
-            setStats(data);
-          }
-        }
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error("Error fetching dashboard stats:", error);
-        }
-      }
-    };
-    fetchDashboardStats();
-    return () => abortController.abort();
-  }, []);
+  const { data: stats = defaultStats } = useSWR(
+    `${import.meta.env.VITE_API_BASE_URL}/analytics/dashboard`,
+    fetcher,
+    { refreshInterval: 5000, fallbackData: defaultStats }
+  );
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
