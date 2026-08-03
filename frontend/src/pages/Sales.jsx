@@ -258,7 +258,7 @@ function Sales() {
                       <td style={{ textAlign: 'right' }}>
                         {canOperate ? (
                           <button 
-                            style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
+                            className="action-btn btn-details"
                             onClick={() => handleOperateRegister(item)}
                           >
                             Operar
@@ -412,15 +412,14 @@ function Sales() {
                     <td style={{ fontWeight: 500, color: 'var(--primary)' }}>Bs. {Number(item.total).toFixed(2)}</td>
                     <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       <button 
-                        style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', color: '#374151', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
+                        className="action-btn btn-details"
                         onClick={() => handleOpenSaleDetails(item.id)}
                       >
                         Ver Detalles
                       </button>
                       {businessRole === 'CEO' && (
                         <button 
-                          className="btn btn-secondary"
-                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderColor: 'var(--error)', color: 'var(--error)' }} 
+                          className="action-btn btn-delete"
                           onClick={async () => {
                             if (window.confirm("¿Estás seguro de limpiar esta venta? Este cambio no se puede deshacer")) {
                               try {

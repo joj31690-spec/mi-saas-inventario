@@ -356,6 +356,7 @@ function Users() {
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       <button 
+                        className="action-btn btn-edit"
                         onClick={() => handleOpenModal(user)}
                         disabled={disableEdit}
                         title={
@@ -365,18 +366,12 @@ function Users() {
                           (!canDeleteUsers && systemRole !== 'ADMIN' && localUserRole !== 'CEO') ? "No tienes permisos para editar roles" :
                           (!canDeleteUsers && systemRole !== 'ADMIN' && localUserRole === 'CEO' && isTargetLocalAdmin) ? "No puedes editar a otro Administrador" : ""
                         }
-                        style={{ 
-                          padding: '0.5rem', 
-                          backgroundColor: '#F3F4F6', 
-                          border: '1px solid #D1D5DB', 
-                          borderRadius: '4px', 
-                          cursor: disableEdit ? 'not-allowed' : 'pointer',
-                          opacity: disableEdit ? 0.5 : 1
-                        }}
+                        style={{ opacity: disableEdit ? 0.5 : 1 }}
                       >
                         Editar
                       </button>
                       <button 
+                        className="action-btn btn-toggle"
                         onClick={() => handleUnlink(user)}
                         disabled={disableDesvincular}
                         title={
@@ -386,15 +381,7 @@ function Users() {
                           (!canDeleteUsers && systemRole !== 'ADMIN' && localUserRole !== 'CEO') ? "Solo administradores pueden desvincular" : 
                           (!canDeleteUsers && systemRole !== 'ADMIN' && localUserRole === 'CEO' && isTargetLocalAdmin) ? "No puedes desvincular a otro Administrador" : ""
                         }
-                        style={{ 
-                          padding: '0.5rem', 
-                          backgroundColor: '#FEF2F2', 
-                          color: '#DC2626', 
-                          border: '1px solid #FCA5A5', 
-                          borderRadius: '4px', 
-                          cursor: disableDesvincular ? 'not-allowed' : 'pointer',
-                          opacity: disableDesvincular ? 0.5 : 1
-                        }}
+                        style={{ opacity: disableDesvincular ? 0.5 : 1 }}
                       >
                         Desvincular
                       </button>
@@ -442,14 +429,14 @@ function Users() {
                     <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       {user.paymentMode === 'MANUAL' && (localUserRole === 'CEO' || canDeleteUsers) && user.baseSalary !== null && user.baseSalary !== undefined && (
                         <button 
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                          className="action-btn btn-details"
                           onClick={() => handlePayManualSalary(user.id)}
                         >
                           Registrar Pago
                         </button>
                       )}
                       <button 
-                        style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', color: '#374151', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                        className="action-btn btn-edit"
                         onClick={() => handleOpenSalaryModal(user)}
                       >
                         Configurar

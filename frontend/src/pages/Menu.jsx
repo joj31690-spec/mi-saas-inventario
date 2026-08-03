@@ -671,20 +671,21 @@ function Menu() {
                               Activar
                             </button>
                           )}
-                          {canUnpublish && (
+                            <button className="action-btn btn-details" onClick={() => handleOpenRecipeModal(item)}>Receta</button>
+                          )}
+                          <button className="action-btn btn-edit" onClick={() => handleOpenMenuModal(item)}>Editar</button>
+                          {businessRole !== 'EMPLEADO' && (
                             <button 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
-                              onClick={() => handleUnpublish(item)}
+                              className="action-btn btn-toggle"
+                              onClick={() => handleToggleMenuActive(item)}
                             >
-                              Desactivar
+                              {item.isActive ? 'Desactivar' : 'Activar'}
                             </button>
                           )}
-                          {businessRole === 'CEO' && item.type !== 'REVENTA' && (
+                          {businessRole === 'CEO' && (
                             <button 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
-                              onClick={() => handleDeleteMenuItem(item)}
+                              className="action-btn btn-delete"
+                              onClick={() => handleDeleteMenu(item.id)}
                             >
                               Eliminar
                             </button>
@@ -746,17 +747,15 @@ function Menu() {
                     {businessRole !== 'EMPLEADO' && (
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', color: 'inherit' }} 
+                          className="action-btn btn-edit"
                           onClick={() => handleOpenIngredientModal(ing)}
                         >
                           Editar
                         </button>
                         {businessRole === 'CEO' && (
                           <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} 
-                            onClick={() => handleDeleteIngredient(ing)}
+                            className="action-btn btn-delete"
+                            onClick={() => handleDeleteIngredient(ing.id)}
                           >
                             Eliminar
                           </button>
@@ -889,7 +888,7 @@ function Menu() {
                         <td>{ing.isActive ? <span style={{ color: 'var(--success)', fontSize: '0.8rem' }}>● Activo</span> : <span style={{ color: 'var(--error)', fontSize: '0.8rem' }}>● Inactivo</span>}</td>
                         <td>{Number(ri.quantity)} {unit}</td>
                         <td style={{ textAlign: 'right' }}>
-                          <button className="btn btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', borderColor: 'var(--error)', color: 'var(--error)' }} onClick={() => handleDeleteRecipeItem(ri.id)}>Eliminar</button>
+                          <button className="action-btn btn-delete" onClick={() => handleDeleteRecipeItem(ri.id)}>Eliminar</button>
                         </td>
                       </tr>
                     )})

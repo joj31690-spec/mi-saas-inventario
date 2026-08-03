@@ -593,7 +593,7 @@ function Personal() {
                   <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>No hay turnos asignados para esta fecha.</td></tr>
                 ) : (
                   paginatedAttendances.map(a => {
-                    const shift = a.assignment.workShift;
+                    const shift = a.assignment?.workShift;
                     let statusLabel = '';
                     let statusColor = '';
                     switch(a.status) {
@@ -610,8 +610,8 @@ function Personal() {
                     return (
                       <tr key={a.id}>
                         <td>{new Date(a.date).toISOString().split('T')[0]}</td>
-                        <td>{a.user.fullName}</td>
-                        <td>{a.assignment.position.name}</td>
+                        <td>{a.user?.fullName}</td>
+                        <td>{a.assignment?.position?.name || 'N/A'}</td>
                         <td>{shift ? `${shift.name} (${formatTime(shift.startTime)} - ${formatTime(shift.endTime)})` : 'N/A'}</td>
                         <td>
                           {a.checkInTime ? formatTime(a.checkInTime) : '-'}
@@ -796,30 +796,30 @@ function Personal() {
                       <td>{item.isActive ? <span className="badge badge-success">Activo</span> : <span className="badge badge-error">Inactivo</span>}</td>
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => {
                             setDetailsPosition(item);
                             setIsPositionDetailsModalOpen(true);
                           }}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Detalles
                         </button>
                         <button 
+                          className="action-btn btn-edit"
                           onClick={() => handleOpenPositionModal(item)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Editar
                         </button>
                         <button 
+                          className="action-btn btn-toggle"
                           onClick={() => handleToggleState('positions', item.id, fetchPositions)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: item.isActive ? '#FFF7ED' : '#F0FDF4', color: item.isActive ? '#EA580C' : '#16A34A', border: `1px solid ${item.isActive ? '#FED7AA' : '#BBF7D0'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           {item.isActive ? 'Desactivar' : 'Activar'}
                         </button>
                         {businessRole === 'CEO' && (
                           <button 
+                            className="action-btn btn-delete"
                             onClick={() => setDeleteConfirmation({ type: 'position', item })}
-                            style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                           >
                             Eliminar
                           </button>
@@ -847,30 +847,30 @@ function Personal() {
                       <td>{item.isActive ? <span className="badge badge-success">Activa</span> : <span className="badge badge-error">Inactiva</span>}</td>
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => {
                             setDetailsCashRegister(item);
                             setIsCashRegisterDetailsModalOpen(true);
                           }}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Detalles
                         </button>
                         <button 
+                          className="action-btn btn-edit"
                           onClick={() => handleOpenCashRegisterModal(item)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Editar
                         </button>
                         <button 
-                          onClick={() => handleToggleState('cash-registers', item.id, fetchCashRegisters)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: item.isActive ? '#FFF7ED' : '#F0FDF4', color: item.isActive ? '#EA580C' : '#16A34A', border: `1px solid ${item.isActive ? '#FED7AA' : '#BBF7D0'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                          className="action-btn btn-toggle"
+                          onClick={() => handleToggleState('cashRegisters', item.id, fetchCashRegisters)}
                         >
                           {item.isActive ? 'Desactivar' : 'Activar'}
                         </button>
                         {businessRole === 'CEO' && (
                           <button 
+                            className="action-btn btn-delete"
                             onClick={() => setDeleteConfirmation({ type: 'cashRegister', item })}
-                            style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                           >
                             Eliminar
                           </button>
@@ -906,29 +906,29 @@ function Personal() {
                       <td>{item.isActive ? <span className="badge badge-success">Activa</span> : <span className="badge badge-error">Inactiva</span>}</td>
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => {
                             setDetailsWorkShift(item);
                             setIsWorkShiftDetailsModalOpen(true);
                           }}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Detalles
                         </button>
                         <button 
+                          className="action-btn btn-edit"
                           onClick={() => handleOpenWorkShiftModal(item)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Editar
                         </button>
                         <button 
+                          className="action-btn btn-toggle"
                           onClick={() => handleToggleState('workShifts', item.id, fetchWorkShifts)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: item.isActive ? '#FFF7ED' : '#F0FDF4', color: item.isActive ? '#EA580C' : '#16A34A', border: `1px solid ${item.isActive ? '#FED7AA' : '#BBF7D0'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           {item.isActive ? 'Desactivar' : 'Activar'}
                         </button>
                         <button 
+                          className="action-btn btn-delete"
                           onClick={() => setDeleteConfirmation({ type: 'workShift', item })}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Eliminar
                         </button>
@@ -996,32 +996,32 @@ function Personal() {
                       
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => {
                             setDetailsAssignment(item);
                             setIsAssignmentDetailsModalOpen(true);
                           }}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Detalles
                         </button>
                         {businessRole !== 'EMPLEADO' && (
                           <>
                             <button 
+                              className="action-btn btn-edit"
                               onClick={() => handleOpenAssignmentModal(item)}
-                              style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                             >
                               Editar
                             </button>
                             <button 
+                              className="action-btn btn-toggle"
                               onClick={() => handleToggleState('assignments', item.id, fetchAssignments)}
-                              style={{ padding: '0.5rem 0.75rem', backgroundColor: item.isActive ? '#FFF7ED' : '#F0FDF4', color: item.isActive ? '#EA580C' : '#16A34A', border: `1px solid ${item.isActive ? '#FED7AA' : '#BBF7D0'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                             >
                               {item.isActive ? 'Desactivar' : 'Activar'}
                             </button>
                             {businessRole === 'CEO' && (
                               <button 
+                                className="action-btn btn-delete"
                                 onClick={() => setDeleteConfirmation({ type: 'assignment', item })}
-                                style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                               >
                                 Eliminar
                               </button>

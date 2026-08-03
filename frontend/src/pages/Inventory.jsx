@@ -541,41 +541,33 @@ function Inventory() {
                     {businessRole !== 'EMPLEADO' && (
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => handleOpenDetails(product)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Detalles
                         </button>
                         <button 
+                          className="action-btn btn-details"
                           onClick={() => handleOpenStockModal(product)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Stock
                         </button>
                         <button 
+                          className="action-btn btn-edit"
                           onClick={() => handleOpenModal(product)}
-                          style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
                           Editar
                         </button>
                         <button 
+                          className="action-btn btn-toggle"
                           onClick={() => handleToggleActive(product)}
-                          style={{ 
-                            padding: '0.5rem 0.75rem', 
-                            fontSize: '0.85rem',
-                            backgroundColor: product.isActive ? '#FFF7ED' : '#F0FDF4', 
-                            color: product.isActive ? '#EA580C' : '#16A34A', 
-                            border: `1px solid ${product.isActive ? '#FED7AA' : '#BBF7D0'}`,
-                            borderRadius: '4px', 
-                            cursor: 'pointer'
-                          }}
                         >
                           {product.isActive ? 'Desactivar' : 'Activar'}
                         </button>
                         {businessRole === 'CEO' && (
                           <button 
+                            className="action-btn btn-delete"
                             onClick={() => handleDelete(product.id)}
-                            style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                           >
                             Eliminar
                           </button>
@@ -647,8 +639,7 @@ function Inventory() {
                       {businessRole !== 'EMPLEADO' && (
                         <td style={{ textAlign: 'right' }}>
                           <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', borderColor: 'var(--error)', color: 'var(--error)' }} 
+                            className="action-btn btn-delete"
                             onClick={async () => {
                               if (window.confirm("¿Estás seguro de limpiar esta compra? Este cambio no se puede deshacer")) {
                                 try {

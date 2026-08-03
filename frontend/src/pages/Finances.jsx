@@ -623,14 +623,14 @@ function Finances() {
                       <td style={{ textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         {item.status !== 'ANULADO' && (
                           <>
-                            <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', color: 'inherit' }} onClick={() => handleOpenExpenseModal(item)}>Editar</button>
-                            <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => handleCancelExpense(item.id)}>Anular</button>
+                            <button className="action-btn btn-edit" onClick={() => handleOpenExpenseModal(item)}>Editar</button>
+                            <button className="action-btn btn-toggle" onClick={() => handleCancelExpense(item.id)}>Anular</button>
                           </>
                         )}
                         {item.status === 'ANULADO' && (
                           <>
-                            <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => handleUncancelExpense(item.id)}>Desanular</button>
-                            <button className="btn btn-secondary" style={{ padding: '0.5rem 0.75rem', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => handleDeleteExpense(item.id)}>Borrar</button>
+                            <button className="action-btn btn-toggle" onClick={() => handleUncancelExpense(item.id)}>Desanular</button>
+                            <button className="action-btn btn-delete" onClick={() => handleDeleteExpense(item.id)}>Borrar</button>
                           </>
                         )}
                       </td>
