@@ -37,7 +37,7 @@ function LogoDisplay({ logo, name, size = 50 }) {
     }
     return (
       <img 
-        src={logo.startsWith('/uploads') ? `${import.meta.env.VITE_BACKEND_URL}${logo}` : logo} 
+        src={logo.startsWith('/uploads') ? `${import.meta.env.VITE_BACKEND_URL || ''}${logo}` : logo} 
         alt={name} 
         style={{ ...style, objectFit: 'cover' }} 
         onError={(e) => { e.target.style.display = 'none'; }}

@@ -311,7 +311,7 @@ function Sales() {
                 {filteredMenu.map(item => (
                   <div key={item.id} style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-color)' }}>
                     {item.imageUrl ? (
-                      <img src={`${import.meta.env.VITE_BACKEND_URL}${item.imageUrl}`} alt={item.name} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                      <img src={item.imageUrl?.startsWith('http') ? item.imageUrl : `${import.meta.env.VITE_BACKEND_URL || ''}${item.imageUrl}`} alt={item.name} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '100%', height: '120px', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>📸</span>

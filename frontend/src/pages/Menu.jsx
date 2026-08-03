@@ -617,7 +617,7 @@ function Menu() {
                           border: '1px solid var(--border-color)'
                         }}>
                           {item.imageUrl ? (
-                            <img src={`${import.meta.env.VITE_BACKEND_URL}${item.imageUrl}`} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={item.imageUrl?.startsWith('http') ? item.imageUrl : `${import.meta.env.VITE_BACKEND_URL || ''}${item.imageUrl}`} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>📸</span>
                           )}

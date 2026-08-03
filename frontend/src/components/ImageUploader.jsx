@@ -190,7 +190,7 @@ const ImageUploader = ({ initialImage, onImageChange, disabled }) => {
         {preview ? (
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <img 
-              src={preview.startsWith('blob:') || preview.startsWith('data:') ? preview : `${import.meta.env.VITE_BACKEND_URL}${preview}`} 
+              src={preview.startsWith('blob:') || preview.startsWith('data:') || preview.startsWith('http') ? preview : `${import.meta.env.VITE_BACKEND_URL || ''}${preview}`} 
               alt="Preview" 
               style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#f0f0f0' }} 
             />

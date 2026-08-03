@@ -520,7 +520,7 @@ function Inventory() {
                         border: '1px solid var(--border-color)'
                       }}>
                         {product.imageUrl ? (
-                          <img src={`${import.meta.env.VITE_BACKEND_URL}${product.imageUrl}`} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={product.imageUrl?.startsWith('http') ? product.imageUrl : `${import.meta.env.VITE_BACKEND_URL || ''}${product.imageUrl}`} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>📸</span>
                         )}
