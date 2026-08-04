@@ -424,8 +424,11 @@ function Finances() {
                         {validProds.length >= 2 ? (
                           <>
                             <p className="number">{topProfitable.name}</p>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                              Margen de {topProfitable.margin.toFixed(2)}%
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+                              <div><strong>Margen:</strong> {topProfitable.margin.toFixed(2)}%</div>
+                              <div><strong>Costo Prom.:</strong> Bs {topProfitable.recipeCost.toFixed(2)}</div>
+                              <div><strong>Gan. Unit.:</strong> Bs {topProfitable.unitProfit.toFixed(2)}</div>
+                              <div><strong>Gan. Total:</strong> Bs {topProfitable.totalProfit.toFixed(2)}</div>
                             </div>
                           </>
                         ) : (
@@ -442,8 +445,11 @@ function Finances() {
                         {validProds.length >= 2 ? (
                           <>
                             <p className="number" style={{ color: 'var(--warning)' }}>{lowestProfitable.name}</p>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                              Margen de {lowestProfitable.margin.toFixed(2)}%
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+                              <div><strong>Margen:</strong> {lowestProfitable.margin.toFixed(2)}%</div>
+                              <div><strong>Costo Prom.:</strong> Bs {lowestProfitable.recipeCost.toFixed(2)}</div>
+                              <div><strong>Gan. Unit.:</strong> Bs {lowestProfitable.unitProfit.toFixed(2)}</div>
+                              <div><strong>Gan. Total:</strong> Bs {lowestProfitable.totalProfit.toFixed(2)}</div>
                             </div>
                           </>
                         ) : (

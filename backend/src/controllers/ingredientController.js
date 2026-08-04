@@ -180,14 +180,16 @@ const createIngredient = async (req, res) => {
 const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, isActive, recipeItems, yieldQuantity, yieldUnit, yieldDescription } = req.body;
+    const { name, description, isActive, type, linkedProductId, recipeItems, yieldQuantity, yieldUnit, yieldDescription } = req.body;
     
     const ingredientId = parseInt(id);
 
     const existing = await prisma.ingredient.findFirst({ where: { id: ingredientId, ...businessWhere(req) } });
     if (!existing) return res.status(404).json({ message: 'Ingrediente no encontrado' });
 
-    if (existing.type === 'PREPARADO' && recipeItems) {
+    const newType = type || existing.type;
+
+    if (newType === 'PREPARADO' && recipeItems) {
       for (const item of recipeItems) {
         if (item.productId) {
           const p = await prisma.product.findFirst({ where: { id: parseInt(item.productId), ...businessWhere(req) } });
@@ -204,10 +206,21 @@ const updateIngredient = async (req, res) => {
       let dataToUpdate = {
         name,
         description,
-        isActive
+        isActive,
+        type: newType
       };
 
-      if (existing.type === 'PREPARADO') {
+      if (newType === 'DIRECTO') {
+        if (!linkedProductId) {
+          throw new Error('Se requiere un producto vinculado para un ingrediente DIRECTO.');
+        }
+        dataToUpdate.linkedProductId = parseInt(linkedProductId);
+        dataToUpdate.yieldQuantity = null;
+        dataToUpdate.yieldUnit = null;
+        dataToUpdate.yieldDescription = null;
+      } else if (newType === 'PREPARADO') {
+        dataToUpdate.linkedProductId = null;
+        
         if (recipeItems && recipeItems.length === 0) {
           throw new Error('Un ingrediente PREPARADO requiere al menos un ingrediente en su receta.');
         }
@@ -244,10 +257,16 @@ const updateIngredient = async (req, res) => {
         data: dataToUpdate
       });
 
-      if (existing.type === 'PREPARADO' && recipeItems && recipeItems.length > 0) {
-        await tx.ingredientRecipe.deleteMany({
-          where: { ingredientId }
-        });
+      // Si cambió de PREPARADO a DIRECTO o si es PREPARADO y se enviaron recipeItems, limpiamos recetas previas
+      if (existing.type === 'PREPARADO' || newType === 'PREPARADO') {
+        if (newType === 'DIRECTO' || (newType === 'PREPARADO' && recipeItems && recipeItems.length > 0)) {
+          await tx.ingredientRecipe.deleteMany({
+            where: { ingredientId }
+          });
+        }
+      }
+
+      if (newType === 'PREPARADO' && recipeItems && recipeItems.length > 0) {
         await tx.ingredientRecipe.createMany({
           data: recipeItems.map(item => ({
             ingredientId,

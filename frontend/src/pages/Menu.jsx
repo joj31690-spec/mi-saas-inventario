@@ -751,7 +751,7 @@ function Menu() {
                         {businessRole === 'CEO' && (
                           <button 
                             className="action-btn btn-delete"
-                            onClick={() => handleDeleteIngredient(ing.id)}
+                            onClick={() => handleDeleteIngredient(ing)}
                           >
                             Eliminar
                           </button>
