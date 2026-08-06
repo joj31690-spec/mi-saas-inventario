@@ -41,31 +41,31 @@ function UserModal({ isOpen, onClose, onSave, initialData = null }) {
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
     }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', backgroundColor: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', color: '#111827' }}>
-        <h2 style={{ margin: 0, color: '#111827' }}>{initialData ? 'Editar Usuario' : 'Crear Usuario CEO'}</h2>
+      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <h2 style={{ margin: 0 }}>{initialData ? 'Editar Usuario' : 'Crear Usuario CEO'}</h2>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
-            <label style={{ color: '#374151' }}>Nombre Completo *</label>
+            <label>Nombre Completo *</label>
             <input 
               type="text" 
               required 
               value={fullName} 
               onChange={e => setFullName(e.target.value)} 
               placeholder="Ej. Juan Pérez" 
-              style={{ backgroundColor: '#F9FAFB', color: '#111827', border: '1px solid #D1D5DB' }}
+              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
             />
           </div>
           
           <div className="form-group">
-            <label style={{ color: '#374151' }}>Usuario (Login) *</label>
+            <label>Usuario (Login) *</label>
             <input 
               type="text" 
               required 
               value={username} 
               onChange={e => setUsername(e.target.value)} 
               placeholder="Ej. jperez" 
-              style={{ backgroundColor: '#F9FAFB', color: '#111827', border: '1px solid #D1D5DB' }}
+              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
             />
           </div>
           
@@ -77,26 +77,26 @@ function UserModal({ isOpen, onClose, onSave, initialData = null }) {
                 checked={changePassword} 
                 onChange={(e) => setChangePassword(e.target.checked)} 
               />
-              <label htmlFor="changePass" style={{ color: '#374151', cursor: 'pointer' }}>Cambiar contraseña</label>
+              <label htmlFor="changePass" style={{ cursor: 'pointer' }}>Cambiar contraseña</label>
             </div>
           )}
 
           {changePassword && (
             <div className="form-group">
-              <label style={{ color: '#374151' }}>{initialData ? 'Nueva Contraseña' : 'Contraseña'} *</label>
+              <label>{initialData ? 'Nueva Contraseña' : 'Contraseña'} *</label>
               <input 
                 type="password" 
                 required={!initialData || changePassword} 
                 value={password} 
                 onChange={e => setPassword(e.target.value)} 
                 placeholder="********" 
-                style={{ backgroundColor: '#F9FAFB', color: '#111827', border: '1px solid #D1D5DB' }}
+                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
               />
             </div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-            <button type="button" className="btn" style={{ backgroundColor: '#E5E7EB', color: '#374151' }} onClick={onClose} disabled={loading}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={loading || !username.trim() || !fullName.trim() || (changePassword && !password)}>
