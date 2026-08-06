@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 function Finances() {
   const [activeTab, setActiveTab] = useState('summary');
@@ -182,25 +182,30 @@ function Finances() {
   const exportToExcel = (activity, profit, income, expenses, period) => {
     const wb = XLSX.utils.book_new();
     
-    const summaryData = [
+    // Combine summary and activity into a single sheet
+    const sheetData = [
       ['Reporte Financiero', `Periodo: ${period}`],
       [],
       ['Resumen de Utilidad', 'Monto (Bs)'],
       ['Total Ingresos', income],
       ['Total Egresos', expenses],
       ['Utilidad Neta', profit],
+      [],
+      ['Actividad Detallada'],
+      ['Fecha', 'Tipo', 'Descripción', 'Monto (Bs)']
     ];
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
 
-    const activityData = activity.map(act => ({
-      Fecha: new Date(act.date).toLocaleDateString(),
-      Tipo: act.type,
-      Descripción: act.description,
-      'Monto (Bs)': act.amount
-    }));
-    const wsActivity = XLSX.utils.json_to_sheet(activityData);
-    XLSX.utils.book_append_sheet(wb, wsActivity, 'Actividad');
+    activity.forEach(act => {
+      sheetData.push([
+        new Date(act.date).toLocaleDateString(),
+        act.type,
+        act.description,
+        act.amount
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Financiero');
 
     XLSX.writeFile(wb, `Reporte_Financiero_${period}.xlsx`);
   };
@@ -213,7 +218,7 @@ function Finances() {
     doc.setFontSize(12);
     doc.text(`Periodo: ${period}`, 14, 30);
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: 40,
       head: [['Resumen de Utilidad', 'Monto (Bs)']],
       body: [
@@ -234,7 +239,7 @@ function Finances() {
       `Bs ${act.amount.toFixed(2)}`
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 20,
       head: [['Fecha', 'Tipo', 'Descripción', 'Monto']],
       body: tableData,
