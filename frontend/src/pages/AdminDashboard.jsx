@@ -67,12 +67,15 @@ function AdminDashboard() {
           </div>
           {(() => {
             let canCheckIn = true;
-            if (stats.myTodayAttendance?.status === 'PENDING_CHECK_IN' && stats.myTodayAttendance?.assignment?.workShift?.startTime) {
+            if (stats.myTodayAttendance?.status === 'PENDING_CHECK_IN' && stats.myTodayAttendance?.assignment?.workShift?.startTime && stats.myTodayAttendance?.date) {
               const now = new Date();
-              const shiftStart = new Date(stats.myTodayAttendance.assignment.workShift.startTime);
-              const todayShiftStart = new Date(now);
-              todayShiftStart.setHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
-              const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
+              const dateStr = stats.myTodayAttendance.date.split('T')[0];
+              const [year, month, day] = dateStr.split('-');
+              const shiftHours = new Date(stats.myTodayAttendance.assignment.workShift.startTime).getUTCHours();
+              const shiftMinutes = new Date(stats.myTodayAttendance.assignment.workShift.startTime).getUTCMinutes();
+              
+              const targetDate = new Date(year, month - 1, day, shiftHours, shiftMinutes, 0, 0);
+              const diffMinutes = (now.getTime() - targetDate.getTime()) / 60000;
               canCheckIn = diffMinutes >= -15;
             }
 

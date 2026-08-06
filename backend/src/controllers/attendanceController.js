@@ -121,26 +121,20 @@ exports.checkIn = async (req, res) => {
     // Check-in logic
     const now = new Date();
     
-    // Convertir el startTime del turno (que está forzado a UTC en DB, ej. 10:00:00Z) a las horas/minutos exactos
-    const shiftStart = new Date(shift.startTime);
-    const shiftHours = shiftStart.getUTCHours();
-    const shiftMinutes = shiftStart.getUTCMinutes();
+    const shiftHours = shift.startTime.getUTCHours();
+    const shiftMinutes = shift.startTime.getUTCMinutes();
     
-    // Calcular el tiempo local del cliente si se provee el offset, o asumir que el servidor y cliente están sincronizados
-    let clientLocalTime = new Date(now);
+    // Convertir el target date a la fecha absoluta de inicio en UTC sumando el offset
+    const targetDateStr = attendance.date.toISOString().split('T')[0];
+    const shiftStartAbsolute = new Date(`${targetDateStr}T00:00:00Z`);
+    shiftStartAbsolute.setUTCHours(shiftHours, shiftMinutes, 0, 0);
+
     if (timezoneOffset !== undefined) {
-      // getTimezoneOffset() devuelve minutos positivos para zonas horarias al oeste de UTC (e.g., +180 para UTC-3).
-      // UTC time = Local time + offset -> Local time = UTC time - offset.
-      // Modificamos el tiempo simulando que nuestro 'UTC' interno es la hora local del cliente.
-      clientLocalTime = new Date(now.getTime() - (timezoneOffset * 60000));
+      shiftStartAbsolute.setUTCMinutes(shiftStartAbsolute.getUTCMinutes() + timezoneOffset);
     }
 
-    // Ahora creamos un Date que represente el inicio del turno en la misma 'zona' simulada
-    const shiftLocalTime = new Date(clientLocalTime);
-    shiftLocalTime.setUTCHours(shiftHours, shiftMinutes, 0, 0);
-
     // Limit check in to at most 15 minutes before
-    const diffMinutes = (clientLocalTime.getTime() - shiftLocalTime.getTime()) / 60000;
+    const diffMinutes = (now.getTime() - shiftStartAbsolute.getTime()) / 60000;
     
     if (diffMinutes < -15) {
       return res.status(400).json({ message: 'Es muy temprano para marcar asistencia (se permite 15 min antes del inicio del turno)' });

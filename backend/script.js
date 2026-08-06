@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.attendance.findMany({ where: { NOT: { notes: null } }, orderBy: { checkInTime: 'desc' }, take: 5, include: { assignment: { include: { workShift: true } } } }).then(res => console.log(JSON.stringify(res, null, 2))).catch(e => console.error(e)).finally(() => prisma.$disconnect());

@@ -643,12 +643,15 @@ function Personal() {
                           {isMyAttendance && a.status === 'PENDING_CHECK_IN' && (
                             (() => {
                               let canCheckIn = true;
-                              if (a.assignment?.workShift?.startTime) {
+                              if (a.assignment?.workShift?.startTime && a.date) {
                                 const now = new Date();
-                                const shiftStart = new Date(a.assignment.workShift.startTime);
-                                const todayShiftStart = new Date(now);
-                                todayShiftStart.setHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
-                                const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
+                                const dateStr = a.date.split('T')[0];
+                                const [year, month, day] = dateStr.split('-');
+                                const shiftHours = new Date(a.assignment.workShift.startTime).getUTCHours();
+                                const shiftMinutes = new Date(a.assignment.workShift.startTime).getUTCMinutes();
+                                
+                                const targetDate = new Date(year, month - 1, day, shiftHours, shiftMinutes, 0, 0);
+                                const diffMinutes = (now.getTime() - targetDate.getTime()) / 60000;
                                 canCheckIn = diffMinutes >= -15;
                               }
                               
