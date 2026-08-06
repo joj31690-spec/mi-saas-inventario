@@ -631,13 +631,31 @@ function Personal() {
                         </td>
                         <td>
                           {isMyAttendance && a.status === 'PENDING_CHECK_IN' && (
-                            <button 
-                              className="btn btn-primary" 
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                              onClick={() => handleCheckIn(a.id)}
-                            >
-                              Marcar mi Asistencia
-                            </button>
+                            (() => {
+                              let canCheckIn = true;
+                              if (a.assignment?.workShift?.startTime) {
+                                const now = new Date();
+                                const shiftStart = new Date(a.assignment.workShift.startTime);
+                                const todayShiftStart = new Date(now);
+                                todayShiftStart.setUTCHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
+                                const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
+                                canCheckIn = diffMinutes >= -15;
+                              }
+                              
+                              return canCheckIn ? (
+                                <button 
+                                  className="btn btn-primary" 
+                                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                                  onClick={() => handleCheckIn(a.id)}
+                                >
+                                  Marcar mi Asistencia
+                                </button>
+                              ) : (
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                  Aún no es hora
+                                </span>
+                              );
+                            })()
                           )}
                           
                           {(businessRole === 'CEO') && a.status === 'PENDING_APPROVAL' && (

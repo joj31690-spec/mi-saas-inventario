@@ -65,12 +65,39 @@ function AdminDashboard() {
                 : 'No has marcado tu llegada hoy o no tienes turno asignado.'}
             </p>
           </div>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/admin/personal')}
-          >
-            {stats.myTodayAttendance && stats.myTodayAttendance.status !== 'PENDING_CHECK_IN' ? 'Ver mis Asistencias' : 'Marcar mi Asistencia'}
-          </button>
+          {(() => {
+            let canCheckIn = true;
+            if (stats.myTodayAttendance?.status === 'PENDING_CHECK_IN' && stats.myTodayAttendance?.assignment?.workShift?.startTime) {
+              const now = new Date();
+              const shiftStart = new Date(stats.myTodayAttendance.assignment.workShift.startTime);
+              const todayShiftStart = new Date(now);
+              todayShiftStart.setUTCHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
+              const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
+              canCheckIn = diffMinutes >= -15;
+            }
+
+            if (stats.myTodayAttendance && stats.myTodayAttendance.status !== 'PENDING_CHECK_IN') {
+              return (
+                <button className="btn btn-primary" onClick={() => navigate('/admin/personal')}>
+                  Ver mis Asistencias
+                </button>
+              );
+            }
+
+            if (canCheckIn) {
+              return (
+                <button className="btn btn-primary" onClick={() => navigate('/admin/personal')}>
+                  Marcar mi Asistencia
+                </button>
+              );
+            }
+
+            return (
+              <button className="btn btn-secondary" onClick={() => navigate('/admin/personal')}>
+                Aún no es hora
+              </button>
+            );
+          })()}
         </div>
       )}
 

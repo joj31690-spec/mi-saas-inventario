@@ -33,7 +33,12 @@ const getDashboardStats = async (req, res) => {
           gte: new Date(new Date().setHours(0,0,0,0))
         }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: 'desc' },
+      include: {
+        assignment: {
+          include: { workShift: true }
+        }
+      }
     });
 
     // 3. Ventas del Turno Activo & Personal en Local
