@@ -16,7 +16,25 @@ const assertAttendanceAdmin = async (req) => {
 
 exports.getAttendances = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, all } = req.query;
+
+    if (all === 'true') {
+      const attendances = await prisma.attendance.findMany({
+        where: {
+          businessId: req.businessId,
+          ...(req.businessRole !== 'CEO' ? { userId: req.user.id } : {})
+        },
+        include: {
+          user: true,
+          assignment: {
+            include: { position: true, workShift: true }
+          }
+        },
+        orderBy: [{ date: 'desc' }, { user: { fullName: 'asc' } }]
+      });
+      return res.json(attendances);
+    }
+
     if (!date) return res.status(400).json({ message: 'Se requiere una fecha (YYYY-MM-DD)' });
 
     const queryDate = new Date(`${date}T12:00:00Z`); // Mediodía para evitar problemas de timezone al sacar el día

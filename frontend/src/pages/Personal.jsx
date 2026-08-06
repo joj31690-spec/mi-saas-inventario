@@ -97,10 +97,13 @@ function Personal() {
 
   // UI state
   const [searchTerm, setSearchTerm] = useState('');
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    const d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  });
   
   const { data: attendances = [], mutate: fetchAttendances } = useSWR(
-    activeTab === 'attendance' ? `${import.meta.env.VITE_API_BASE_URL}/attendances?date=${attendanceDate}` : null,
+    activeTab === 'attendance' ? `${import.meta.env.VITE_API_BASE_URL}/attendances?${attendanceDate === 'all' ? 'all=true' : `date=${attendanceDate}`}` : null,
     fetcher,
     { refreshInterval: 5000 }
   );
@@ -578,14 +581,22 @@ function Personal() {
 
       {activeTab === 'attendance' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h2 style={{ margin: 0 }}>Control de Asistencia</h2>
-            <input 
-              type="date" 
-              value={attendanceDate}
-              onChange={(e) => setAttendanceDate(e.target.value)}
-              style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)' }}
-            />
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button 
+                className={`btn ${attendanceDate === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setAttendanceDate('all')}
+              >
+                Ver todas
+              </button>
+              <input 
+                type="date" 
+                value={attendanceDate === 'all' ? '' : attendanceDate}
+                onChange={(e) => setAttendanceDate(e.target.value)}
+                style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)' }}
+              />
+            </div>
           </div>
           
           <div className="table-responsive">
