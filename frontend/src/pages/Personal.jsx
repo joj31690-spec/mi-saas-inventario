@@ -647,7 +647,7 @@ function Personal() {
                                 const now = new Date();
                                 const shiftStart = new Date(a.assignment.workShift.startTime);
                                 const todayShiftStart = new Date(now);
-                                todayShiftStart.setUTCHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
+                                todayShiftStart.setHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
                                 const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
                                 canCheckIn = diffMinutes >= -15;
                               }
