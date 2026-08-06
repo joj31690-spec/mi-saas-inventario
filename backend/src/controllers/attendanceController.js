@@ -22,6 +22,7 @@ exports.getAttendances = async (req, res) => {
       const attendances = await prisma.attendance.findMany({
         where: {
           businessId: req.businessId,
+          status: { not: 'PENDING_CHECK_IN' },
           ...(req.businessRole !== 'CEO' ? { userId: req.user.id } : {})
         },
         include: {
