@@ -6,9 +6,10 @@ const getGlobalUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       where: {
-        systemRole: {
-          not: 'ADMIN'
-        }
+        OR: [
+          { id: req.user.id },
+          { creatorId: req.user.id }
+        ]
       },
       select: {
         id: true,
@@ -57,6 +58,7 @@ const createGlobalUser = async (req, res) => {
         email: email || null,
         phone: phone || null,
         systemRole: 'CEO',
+        creatorId: req.user.id,
         canManageUsers: canManageUsers || false,
         canEditUsers: canEditUsers || false
       },
@@ -108,6 +110,12 @@ const updateGlobalUser = async (req, res) => {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    const userToUpdate = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+    if (!userToUpdate) return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (userToUpdate.creatorId !== req.user.id && userToUpdate.id !== req.user.id) {
+      return res.status(403).json({ message: 'No tienes permiso para editar este usuario' });
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(id) },
       data: updateData,
@@ -134,6 +142,12 @@ const updateGlobalUser = async (req, res) => {
 const deleteGlobalUser = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const userToDelete = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+    if (!userToDelete) return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (userToDelete.creatorId !== req.user.id) {
+      return res.status(403).json({ message: 'No tienes permiso para eliminar este usuario' });
+    }
 
     // Primero eliminar todas las vinculaciones a negocios
     await prisma.businessUser.deleteMany({

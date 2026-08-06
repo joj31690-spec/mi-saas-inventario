@@ -5,15 +5,15 @@ const bcrypt = require('bcrypt');
 const getStats = async (req, res) => {
   try {
     const totalUsers = await prisma.user.count({
-      where: { systemRole: 'CEO' }
+      where: { systemRole: 'CEO', creatorId: null }
     });
     
     const activeUsers = await prisma.user.count({
-      where: { systemRole: 'CEO', isActive: true }
+      where: { systemRole: 'CEO', isActive: true, creatorId: null }
     });
     
     const suspendedUsers = await prisma.user.count({
-      where: { systemRole: 'CEO', isActive: false }
+      where: { systemRole: 'CEO', isActive: false, creatorId: null }
     });
     
     const totalBusinesses = await prisma.business.count();
@@ -33,7 +33,7 @@ const getStats = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      where: { systemRole: 'CEO' },
+      where: { systemRole: 'CEO', creatorId: null },
       select: {
         id: true,
         username: true,

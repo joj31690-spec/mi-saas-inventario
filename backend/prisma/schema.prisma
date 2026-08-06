@@ -42,6 +42,10 @@ model User {
   expenses     Expense[]
   attendances  Attendance[]
 
+  creatorId    Int?       @map("creator_id")
+  creator      User?      @relation("UserCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  createdUsers User[]     @relation("UserCreator")
+
   @@map("users")
 }
 
