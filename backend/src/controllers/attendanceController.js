@@ -42,6 +42,12 @@ exports.getAttendances = async (req, res) => {
     // Sincronizar: Crear asistencias faltantes
     for (const assignment of assignments) {
       if (assignment.workShift && assignment.workShift[dayName] === true && assignment.workShift.isActive) {
+        
+        // Verificar si la fecha de la asignación ya inició
+        if (assignment.startDate > targetDate) {
+          continue;
+        }
+
         // Verificar si ya existe asistencia
         const existing = await prisma.attendance.findUnique({
           where: {
@@ -95,6 +101,8 @@ exports.getAttendances = async (req, res) => {
 exports.checkIn = async (req, res) => {
   try {
     const { id } = req.params;
+    const { timezoneOffset } = req.body; // Offset en minutos (e.g., 180 para UTC-3)
+    
     const attendance = await prisma.attendance.findFirst({
       where: { id: parseInt(id), businessId: req.businessId },
       include: { assignment: { include: { workShift: true } } }
@@ -113,16 +121,26 @@ exports.checkIn = async (req, res) => {
     // Check-in logic
     const now = new Date();
     
-    // Turn shift.startTime (UTC time from DB 1970-01-01) into today's local time for comparison
+    // Convertir el startTime del turno (que está forzado a UTC en DB, ej. 10:00:00Z) a las horas/minutos exactos
     const shiftStart = new Date(shift.startTime);
+    const shiftHours = shiftStart.getUTCHours();
+    const shiftMinutes = shiftStart.getUTCMinutes();
     
-    // Create a Date object for today with the shift's hours/minutes
-    // Prisma returns Time as a Date object on 1970-01-01 in UTC.
-    const todayShiftStart = new Date(now);
-    todayShiftStart.setUTCHours(shiftStart.getUTCHours(), shiftStart.getUTCMinutes(), 0, 0);
+    // Calcular el tiempo local del cliente si se provee el offset, o asumir que el servidor y cliente están sincronizados
+    let clientLocalTime = new Date(now);
+    if (timezoneOffset !== undefined) {
+      // getTimezoneOffset() devuelve minutos positivos para zonas horarias al oeste de UTC (e.g., +180 para UTC-3).
+      // UTC time = Local time + offset -> Local time = UTC time - offset.
+      // Modificamos el tiempo simulando que nuestro 'UTC' interno es la hora local del cliente.
+      clientLocalTime = new Date(now.getTime() - (timezoneOffset * 60000));
+    }
+
+    // Ahora creamos un Date que represente el inicio del turno en la misma 'zona' simulada
+    const shiftLocalTime = new Date(clientLocalTime);
+    shiftLocalTime.setUTCHours(shiftHours, shiftMinutes, 0, 0);
 
     // Limit check in to at most 15 minutes before
-    const diffMinutes = (now.getTime() - todayShiftStart.getTime()) / 60000;
+    const diffMinutes = (clientLocalTime.getTime() - shiftLocalTime.getTime()) / 60000;
     
     if (diffMinutes < -15) {
       return res.status(400).json({ message: 'Es muy temprano para marcar asistencia (se permite 15 min antes del inicio del turno)' });

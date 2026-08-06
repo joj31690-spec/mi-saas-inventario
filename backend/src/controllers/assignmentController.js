@@ -99,7 +99,7 @@ const calculateNextPaymentDate = (startDate, type) => {
 
 const createAssignment = async (req, res) => {
   try {
-    const { userId, positionId, cashRegisterId, workShiftId, extraPayForShift } = req.body;
+    const { userId, positionId, cashRegisterId, workShiftId, extraPayForShift, startDate } = req.body;
     
     if (!userId || !positionId || !workShiftId) {
       return res.status(400).json({ message: 'Usuario, Puesto y Jornada son obligatorios' });
@@ -118,6 +118,11 @@ const createAssignment = async (req, res) => {
     if (!shift) return res.status(400).json({ message: 'La jornada no pertenece a este negocio' });
     if (cashRegisterId && !cashRegister) return res.status(400).json({ message: 'La caja no pertenece a este negocio' });
 
+    let parsedStartDate = undefined;
+    if (startDate) {
+      parsedStartDate = new Date(`${startDate}T00:00:00Z`);
+    }
+
     const newAssignment = await prisma.employeeAssignment.create({
       data: {
         businessId: req.businessId,
@@ -126,6 +131,7 @@ const createAssignment = async (req, res) => {
         cashRegisterId: cashRegisterId ? parseInt(cashRegisterId) : null,
         workShiftId: parseInt(workShiftId),
         extraPayForShift: extraPayForShift ? parseFloat(extraPayForShift) : null,
+        startDate: parsedStartDate,
         isActive: true
       }
     });
@@ -139,7 +145,7 @@ const createAssignment = async (req, res) => {
 const updateAssignment = async (req, res) => {
   try {
     const { id } = req.params;
-    let { userId, positionId, cashRegisterId, workShiftId, extraPayForShift, isActive } = req.body;
+    let { userId, positionId, cashRegisterId, workShiftId, extraPayForShift, isActive, startDate } = req.body;
 
     const existingId = parseInt(id);
     const existingAssignment = await prisma.employeeAssignment.findFirst({ where: { id: existingId, ...businessWhere(req) } });
@@ -167,6 +173,11 @@ const updateAssignment = async (req, res) => {
       extraPayForShift = undefined;
     }
 
+    let parsedStartDate = undefined;
+    if (startDate) {
+      parsedStartDate = new Date(`${startDate}T00:00:00Z`);
+    }
+
     const updatedAssignment = await prisma.employeeAssignment.update({
       where: { id: existingId },
       data: {
@@ -175,7 +186,8 @@ const updateAssignment = async (req, res) => {
         cashRegisterId: cashRegisterId !== undefined ? (cashRegisterId ? parseInt(cashRegisterId) : null) : existingAssignment.cashRegisterId,
         workShiftId: workShiftId !== undefined ? (workShiftId ? parseInt(workShiftId) : null) : existingAssignment.workShiftId,
         extraPayForShift: extraPayForShift !== undefined ? (extraPayForShift ? parseFloat(extraPayForShift) : null) : existingAssignment.extraPayForShift,
-        isActive: isActive !== undefined ? isActive : existingAssignment.isActive
+        isActive: isActive !== undefined ? isActive : existingAssignment.isActive,
+        startDate: parsedStartDate || existingAssignment.startDate
       },
       include: {
         user: { select: { id: true, username: true, fullName: true, isActive: true } },

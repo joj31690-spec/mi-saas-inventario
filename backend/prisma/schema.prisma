@@ -285,6 +285,7 @@ model EmployeeAssignment {
   workShiftId     Int?       @map("work_shift_id")
   extraPayForShift Decimal?  @map("extra_pay_for_shift")
   isActive        Boolean    @default(true) @map("is_active")
+  startDate       DateTime   @default(now()) @map("start_date")
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @default(now()) @map("updated_at")
 

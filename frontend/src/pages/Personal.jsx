@@ -9,6 +9,12 @@ const formatTime = (dateString) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' });
 };
 
+const formatLocalTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+};
+
 const formatTimeFromInput = (timeString) => {
   if (!timeString) return null;
   // Guardamos en DB asumiendo 1970-01-01T{time}Z para tratar solo la hora
@@ -133,7 +139,8 @@ function Personal() {
     positionId: '', 
     cashRegisterId: '', 
     workShiftId: '',
-    extraPayForShift: ''
+    extraPayForShift: '',
+    startDate: ''
   });
   
   const defaultWorkShiftForm = {
@@ -243,7 +250,9 @@ function Personal() {
 
   const handleCheckIn = async (attendanceId) => {
     try {
-      const res = await apiCall(`${import.meta.env.VITE_API_BASE_URL}/attendances/${attendanceId}/check-in`, 'POST');
+      const res = await apiCall(`${import.meta.env.VITE_API_BASE_URL}/attendances/${attendanceId}/check-in`, 'POST', {
+        timezoneOffset: new Date().getTimezoneOffset()
+      });
       if (res.ok) {
         showMessage('Asistencia marcada correctamente');
         fetchAttendances();
@@ -421,7 +430,8 @@ function Personal() {
       positionId: item?.position?.id || '', 
       cashRegisterId: item?.cashRegister?.id || '',
       workShiftId: item?.workShift?.id || '',
-      extraPayForShift: item?.extraPayForShift || ''
+      extraPayForShift: item?.extraPayForShift || '',
+      startDate: item?.startDate ? new Date(item.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
     });
     setIsAssignmentModalOpen(true);
   };
@@ -618,7 +628,7 @@ function Personal() {
                         <td>{a?.assignment?.position?.name || 'N/A'}</td>
                         <td>{shift ? `${shift.name} (${formatTime(shift.startTime)} - ${formatTime(shift.endTime)})` : 'N/A'}</td>
                         <td>
-                          {a?.checkInTime ? formatTime(a.checkInTime) : '-'}
+                          {a?.checkInTime ? formatLocalTime(a.checkInTime) : '-'}
                           {a?.notes && <div style={{ fontSize: '0.8rem', color: '#EF4444' }}>{a.notes}</div>}
                         </td>
                         <td>
@@ -1265,6 +1275,17 @@ function Personal() {
                 </div>
               )}
               
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>Fecha de Inicio *</label>
+                <input 
+                  type="date" 
+                  required
+                  value={assignmentForm.startDate} 
+                  onChange={e => setAssignmentForm({...assignmentForm, startDate: e.target.value})} 
+                />
+                <small style={{ color: 'var(--text-muted)' }}>A partir de esta fecha, el empleado deberá marcar asistencia para este turno.</small>
+              </div>
+
               <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                 <label>Caja Asignada (Opcional)</label>
                 <select value={assignmentForm.cashRegisterId} onChange={e => setAssignmentForm({...assignmentForm, cashRegisterId: e.target.value})}>
