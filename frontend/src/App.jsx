@@ -13,6 +13,7 @@ import AdminLayout from './components/AdminLayout';
 import SaasAdminLayout from './layouts/SaasAdminLayout';
 import UserManagement from './pages/SaasAdmin/UserManagement';
 import { BusinessProvider, useBusiness } from './context/BusinessContext';
+import ThemeToggle from './components/ThemeToggle';
 
 function AppContent() {
   const { selectedBusiness, isLoading } = useBusiness();
@@ -151,6 +152,7 @@ function App() {
     <Router>
       <BusinessProvider>
         <AppContent />
+        <ThemeToggle />
       </BusinessProvider>
     </Router>
   );
