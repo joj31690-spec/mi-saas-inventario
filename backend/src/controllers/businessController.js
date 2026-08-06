@@ -148,9 +148,26 @@ const deleteBusiness = async (req, res) => {
       return res.status(401).json({ message: 'Contraseña incorrecta' });
     }
 
-    await prisma.business.delete({
-      where: { id: parseInt(id) }
-    });
+    const bId = parseInt(id);
+
+    await prisma.$transaction([
+      prisma.attendance.deleteMany({ where: { businessId: bId } }),
+      prisma.employeeAssignment.deleteMany({ where: { businessId: bId } }),
+      prisma.recipeItem.deleteMany({ where: { menuItem: { businessId: bId } } }),
+      prisma.ingredientRecipe.deleteMany({ where: { ingredient: { businessId: bId } } }),
+      prisma.inventoryMovement.deleteMany({ where: { businessId: bId } }),
+      prisma.saleItem.deleteMany({ where: { sale: { businessId: bId } } }),
+      prisma.sale.deleteMany({ where: { businessId: bId } }),
+      prisma.expense.deleteMany({ where: { businessId: bId } }),
+      prisma.menuItem.deleteMany({ where: { businessId: bId } }),
+      prisma.ingredient.deleteMany({ where: { businessId: bId } }),
+      prisma.product.deleteMany({ where: { businessId: bId } }),
+      prisma.workShift.deleteMany({ where: { businessId: bId } }),
+      prisma.position.deleteMany({ where: { businessId: bId } }),
+      prisma.cashRegister.deleteMany({ where: { businessId: bId } }),
+      prisma.businessUser.deleteMany({ where: { businessId: bId } }),
+      prisma.business.delete({ where: { id: bId } })
+    ]);
 
     res.json({ message: 'Negocio eliminado permanentemente' });
   } catch (error) {
