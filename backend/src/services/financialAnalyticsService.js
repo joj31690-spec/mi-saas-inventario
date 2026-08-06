@@ -185,6 +185,73 @@ const getRecentActivity = async (startDate, endDate, businessId) => {
   return activity.slice(0, 20);
 };
 
+const getActivityPaginated = async (startDate, endDate, businessId, page = 1, limit = 10) => {
+  let salesWhere = { businessId };
+  let expenseWhere = { businessId, status: { not: 'ANULADO' } };
+  let movementWhere = { businessId, type: 'ENTRY' };
+  
+  if (startDate || endDate) {
+    salesWhere.createdAt = {};
+    expenseWhere.date = {};
+    movementWhere.createdAt = {};
+    if (startDate) {
+      salesWhere.createdAt.gte = new Date(startDate);
+      expenseWhere.date.gte = new Date(startDate);
+      movementWhere.createdAt.gte = new Date(startDate);
+    }
+    if (endDate) {
+      salesWhere.createdAt.lte = new Date(endDate);
+      expenseWhere.date.lte = new Date(endDate);
+      movementWhere.createdAt.lte = new Date(endDate);
+    }
+  }
+
+  const [sales, expenses, purchases] = await Promise.all([
+    prisma.sale.findMany({ where: salesWhere }),
+    prisma.expense.findMany({ where: expenseWhere }),
+    prisma.inventoryMovement.findMany({ where: movementWhere, include: { product: true } })
+  ]);
+
+  let activity = [];
+
+  sales.forEach(s => {
+    activity.push({
+      id: `sale-${s.id}`,
+      type: 'Venta',
+      date: s.createdAt,
+      amount: parseFloat(s.total),
+      description: 'Venta completada'
+    });
+  });
+
+  expenses.forEach(e => {
+    activity.push({
+      id: `expense-${e.id}`,
+      type: 'Egreso',
+      date: e.date,
+      amount: parseFloat(e.amount),
+      description: e.concept
+    });
+  });
+
+  purchases.forEach(p => {
+    activity.push({
+      id: `purchase-${p.id}`,
+      type: 'Compra',
+      date: p.createdAt,
+      amount: parseFloat(p.cost || 0),
+      description: p.product ? p.product.name : 'Insumos'
+    });
+  });
+
+  activity.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  const totalItems = activity.length;
+  const data = activity.slice((page - 1) * limit, page * limit);
+
+  return { data, totalItems };
+};
+
 const getBreakevenPoint = async (startDate, endDate, businessId) => {
   const operatingExpenses = await getOperatingExpenses(startDate, endDate, businessId);
   const payroll = await getEstimatedMonthlyPayroll(businessId);
@@ -327,5 +394,6 @@ module.exports = {
   getAverageRecipeCost,
   getProductProfitability,
   getRecentActivity,
+  getActivityPaginated,
   getActualAutomaticPayroll
 };

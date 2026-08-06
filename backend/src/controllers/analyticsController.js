@@ -6,6 +6,7 @@ const {
   getBreakevenPoint,
   getProductProfitability,
   getRecentActivity,
+  getActivityPaginated,
   getActualAutomaticPayroll
 } = require('../services/financialAnalyticsService');
 
@@ -64,7 +65,20 @@ const getProfitability = async (req, res) => {
   }
 };
 
+const getActivity = async (req, res) => {
+  try {
+    const { startDate, endDate, page = 1, limit = 10 } = req.query;
+    const businessId = req.businessId;
+    
+    const result = await getActivityPaginated(startDate, endDate, businessId, parseInt(page), parseInt(limit));
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener actividad', error: error.message });
+  }
+};
+
 module.exports = {
   getSummary,
-  getProfitability
+  getProfitability,
+  getActivity
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getSummary, getProfitability } = require('../controllers/analyticsController');
+const { getSummary, getProfitability, getActivity } = require('../controllers/analyticsController');
 const { getDashboardStats } = require('../controllers/dashboardController');
 const { verifyToken, requireBusinessRole } = require('../middleware/authMiddleware');
 
@@ -13,5 +13,6 @@ router.get('/dashboard', getDashboardStats);
 router.use(requireBusinessRole(['CEO']));
 router.get('/summary', getSummary);
 router.get('/profitability', getProfitability);
+router.get('/activity', getActivity);
 
 module.exports = router;

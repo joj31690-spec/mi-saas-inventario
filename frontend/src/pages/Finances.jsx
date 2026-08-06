@@ -13,6 +13,9 @@ function Finances() {
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   
   const [globalDateRange, setGlobalDateRange] = useState('ESTE_MES'); // HOY, ESTA_SEMANA, ESTE_MES, ESTE_ANIO, TODOS
+  
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityData, setActivityData] = useState({ data: [], totalItems: 0 });
 
   // States for Expense Modal
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -40,6 +43,7 @@ function Finances() {
 
     if (activeTab === 'summary') {
       fetchSummary(signal);
+      fetchActivity(signal);
     } else if (activeTab === 'profitability') {
       fetchProfitability(signal);
     } else if (activeTab === 'expenses') {
@@ -48,6 +52,17 @@ function Finances() {
 
     return () => controller.abort();
   }, [activeTab, globalDateRange]);
+
+  useEffect(() => {
+    setActivityPage(1);
+  }, [globalDateRange]);
+
+  useEffect(() => {
+    if (activeTab !== 'summary') return;
+    const controller = new AbortController();
+    fetchActivity(controller.signal);
+    return () => controller.abort();
+  }, [activityPage]);
 
   const getQueryString = () => {
     if (globalDateRange === 'TODOS') return '';
@@ -86,6 +101,17 @@ function Finances() {
       if (error.name !== 'CanceledError' && error.name !== 'AbortError') console.error('Error al cargar resumen:', error);
     } finally {
       setLoadingAnalytics(false);
+    }
+  };
+
+  const fetchActivity = async (signal) => {
+    try {
+      const qs = getQueryString();
+      const separator = qs ? '&' : '?';
+      const res = await api.get(`/analytics/activity${qs}${separator}page=${activityPage}&limit=10`, { signal });
+      setActivityData(res.data);
+    } catch (error) {
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') console.error('Error al cargar actividad:', error);
     }
   };
 
@@ -369,12 +395,12 @@ function Finances() {
                 </div>
                 
                 <div className="dashboard-card">
-                  <h3>Actividad Reciente</h3>
-                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
-                    {summaryData.recentActivity.length === 0 ? (
-                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No hay actividad reciente.</div>
+                  <h3>Actividad</h3>
+                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                    {activityData.data.length === 0 ? (
+                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No hay actividad en este periodo.</div>
                     ) : (
-                      summaryData.recentActivity.map(act => (
+                      activityData.data.map(act => (
                         <div key={act.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-secondary)' }}>
                           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -392,6 +418,29 @@ function Finances() {
                       ))
                     )}
                   </div>
+                  {activityData.totalItems > 10 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={() => setActivityPage(p => Math.max(1, p - 1))}
+                        disabled={activityPage === 1}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}
+                      >
+                        Anterior
+                      </button>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                        Página {activityPage} de {Math.ceil(activityData.totalItems / 10)}
+                      </span>
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={() => setActivityPage(p => p + 1)}
+                        disabled={activityPage >= Math.ceil(activityData.totalItems / 10)}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
