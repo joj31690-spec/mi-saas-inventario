@@ -247,7 +247,13 @@ const getActivityPaginated = async (startDate, endDate, businessId, page = 1, li
   activity.sort((a, b) => new Date(b.date) - new Date(a.date));
   
   const totalItems = activity.length;
-  const data = activity.slice((page - 1) * limit, page * limit);
+  let data = activity;
+  
+  if (limit !== 'all') {
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    data = activity.slice((pageNum - 1) * limitNum, pageNum * limitNum);
+  }
 
   return { data, totalItems };
 };

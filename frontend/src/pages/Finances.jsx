@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 function Finances() {
   const [activeTab, setActiveTab] = useState('summary');
@@ -16,6 +19,10 @@ function Finances() {
   
   const [activityPage, setActivityPage] = useState(1);
   const [activityData, setActivityData] = useState({ data: [], totalItems: 0 });
+
+  // Export
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // States for Expense Modal
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -135,10 +142,106 @@ function Finances() {
       const res = await api.get(`/expenses${qs}`, { signal });
       setExpenses(res.data);
     } catch (error) {
-      if (error.name !== 'CanceledError' && error.name !== 'AbortError') console.error('Error al cargar gastos', error);
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') console.error('Error al cargar egresos:', error);
     } finally {
       setLoadingExpenses(false);
     }
+  };
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const qs = getQueryString();
+      const separator = qs ? '&' : '?';
+      
+      const [activityRes, summaryRes] = await Promise.all([
+        api.get(`/analytics/activity${qs}${separator}limit=all`),
+        api.get(`/analytics/summary${qs}`)
+      ]);
+      
+      const fullActivity = activityRes.data.data;
+      const { profit, income, totalExpenses } = summaryRes.data.summary;
+      const periodMap = { 'HOY': 'Hoy', 'ESTA_SEMANA': 'Esta Semana', 'ESTE_MES': 'Este Mes', 'ESTE_ANIO': 'Este Año', 'TODOS': 'Todos' };
+      const periodLabel = periodMap[globalDateRange] || 'Todos';
+
+      if (format === 'excel') {
+        exportToExcel(fullActivity, profit, income, totalExpenses, periodLabel);
+      } else {
+        exportToPDF(fullActivity, profit, income, totalExpenses, periodLabel);
+      }
+      setShowExportModal(false);
+      showMessage(`Reporte exportado exitosamente como ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error('Error al exportar:', error);
+      showMessage('Error al generar la exportación', 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportToExcel = (activity, profit, income, expenses, period) => {
+    const wb = XLSX.utils.book_new();
+    
+    const summaryData = [
+      ['Reporte Financiero', `Periodo: ${period}`],
+      [],
+      ['Resumen de Utilidad', 'Monto (Bs)'],
+      ['Total Ingresos', income],
+      ['Total Egresos', expenses],
+      ['Utilidad Neta', profit],
+    ];
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+
+    const activityData = activity.map(act => ({
+      Fecha: new Date(act.date).toLocaleDateString(),
+      Tipo: act.type,
+      Descripción: act.description,
+      'Monto (Bs)': act.amount
+    }));
+    const wsActivity = XLSX.utils.json_to_sheet(activityData);
+    XLSX.utils.book_append_sheet(wb, wsActivity, 'Actividad');
+
+    XLSX.writeFile(wb, `Reporte_Financiero_${period}.xlsx`);
+  };
+
+  const exportToPDF = (activity, profit, income, expenses, period) => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Reporte Financiero', 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Periodo: ${period}`, 14, 30);
+    
+    doc.autoTable({
+      startY: 40,
+      head: [['Resumen de Utilidad', 'Monto (Bs)']],
+      body: [
+        ['Total Ingresos', `Bs ${income.toFixed(2)}`],
+        ['Total Egresos', `Bs ${expenses.toFixed(2)}`],
+        ['Utilidad Neta', `Bs ${profit.toFixed(2)}`],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+
+    doc.text('Actividad Detallada', 14, doc.lastAutoTable.finalY + 15);
+    
+    const tableData = activity.map(act => [
+      new Date(act.date).toLocaleDateString(),
+      act.type,
+      act.description,
+      `Bs ${act.amount.toFixed(2)}`
+    ]);
+
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 20,
+      head: [['Fecha', 'Tipo', 'Descripción', 'Monto']],
+      body: tableData,
+      theme: 'striped',
+    });
+
+    doc.save(`Reporte_Financiero_${period}.pdf`);
   };
 
   const handleOpenExpenseModal = (item = null) => {
@@ -260,6 +363,14 @@ function Finances() {
             <option value="ESTE_ANIO">Este Año</option>
             <option value="TODOS">Histórico Total</option>
           </select>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setShowExportModal(true)}
+            title="Descargar Reporte Financiero"
+            style={{ padding: '0.5rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            📥
+          </button>
         </div>
       </div>
 
@@ -818,6 +929,44 @@ function Finances() {
         </div>
       )}
 
+        {/* --- MODAL DE EXPORTACIÓN --- */}
+        {showExportModal && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+              <h2 style={{ color: 'var(--primary)', margin: '0 0 1rem 0' }}>Descargar Reporte</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                Selecciona el formato en el que deseas descargar el reporte financiero del periodo actual.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => handleExport('excel')}
+                  disabled={exporting}
+                  style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <span style={{ fontSize: '2rem' }}>📊</span>
+                  Excel (.xlsx)
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => handleExport('pdf')}
+                  disabled={exporting}
+                  style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <span style={{ fontSize: '2rem' }}>📄</span>
+                  PDF
+                </button>
+              </div>
+
+              <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setShowExportModal(false)} disabled={exporting}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
