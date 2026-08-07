@@ -4,11 +4,14 @@ const prisma = require('../prismaClient');
 // Obtener todos los usuarios globales (excluyendo ADMIN si se desea, o simplemente todos)
 const getGlobalUsers = async (req, res) => {
   try {
+    const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const envId = currentUser.creatorId || currentUser.id;
+
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { id: req.user.id },
-          { creatorId: req.user.id }
+          { id: envId },
+          { creatorId: envId }
         ]
       },
       select: {
@@ -49,6 +52,9 @@ const createGlobalUser = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
+    const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const envId = currentUser.creatorId || currentUser.id;
+
     // systemRole por defecto es CEO (basado en schema actual)
     const newUser = await prisma.user.create({
       data: {
@@ -58,7 +64,7 @@ const createGlobalUser = async (req, res) => {
         email: email || null,
         phone: phone || null,
         systemRole: 'CEO',
-        creatorId: req.user.id,
+        creatorId: envId,
         canManageUsers: canManageUsers || false,
         canEditUsers: canEditUsers || false
       },
@@ -110,10 +116,19 @@ const updateGlobalUser = async (req, res) => {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const envId = currentUser.creatorId || currentUser.id;
+
     const userToUpdate = await prisma.user.findUnique({ where: { id: parseInt(id) } });
     if (!userToUpdate) return res.status(404).json({ message: 'Usuario no encontrado' });
-    if (userToUpdate.creatorId !== req.user.id && userToUpdate.id !== req.user.id) {
+    
+    const targetEnvId = userToUpdate.creatorId || userToUpdate.id;
+    if (targetEnvId !== envId) {
       return res.status(403).json({ message: 'No tienes permiso para editar este usuario' });
+    }
+
+    if (req.user.id !== userToUpdate.id && userToUpdate.creatorId === null) {
+      return res.status(403).json({ message: 'No puedes editar al CEO principal' });
     }
 
     const updatedUser = await prisma.user.update({
@@ -143,10 +158,19 @@ const deleteGlobalUser = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const envId = currentUser.creatorId || currentUser.id;
+
     const userToDelete = await prisma.user.findUnique({ where: { id: parseInt(id) } });
     if (!userToDelete) return res.status(404).json({ message: 'Usuario no encontrado' });
-    if (userToDelete.creatorId !== req.user.id) {
+    
+    const targetEnvId = userToDelete.creatorId || userToDelete.id;
+    if (targetEnvId !== envId) {
       return res.status(403).json({ message: 'No tienes permiso para eliminar este usuario' });
+    }
+
+    if (userToDelete.creatorId === null) {
+      return res.status(403).json({ message: 'No puedes eliminar al CEO principal' });
     }
 
     // Primero eliminar todas las vinculaciones a negocios
